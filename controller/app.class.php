@@ -7,13 +7,9 @@
 */
 
 class app extends Controller{
-    /**
-     * 构造函数
-     */
     function __construct()    {
         parent::__construct();
-        $role = $_SESSION['user']['role'];
-        $this->sql=new fileCache($this->config['system_file']['apps']);
+        $this->sql=new fileCache(USER_SYSTEM.'apps.php');
     }
 
     /**
@@ -22,19 +18,47 @@ class app extends Controller{
     public function index() {
         $this->display(TEMPLATE.'app/index.php');
     }
-    
+
+    public function init_app($user_info){
+        $list = $this->sql->get();
+        $new_user_app = $this->config['setting_system']['new_user_app'];
+        $default = explode(',',$new_user_app);
+        $info = array();
+        foreach ($default as $key) {
+            $info[$key] = $list[$key];
+        }
+        $desktop = USER_PATH.$user_info['name'].'/home/desktop/';
+        mk_dir($desktop);
+        foreach ($info as $key => $data) {
+            if (!is_array($data)) {
+                continue;
+            }
+            $path = iconv_system($desktop.$key.'.oexe');
+            unset($data['name']);
+            unset($data['desc']);
+            unset($data['group']);
+            file_put_contents($path, json_encode($data));
+        }
+        $user_info['status'] = 1;
+        $member = new fileCache(USER_SYSTEM.'member.php');
+        $member->update($user_info['name'],$user_info);
+    }
+
     /**
      * 用户app 添加、编辑
      */
     public function user_app() {
         $path = _DIR($this->in['path']);
-        if ($this->in['action'] == 'add'){
+        if (isset($this->in['action']) && $this->in['action'] == 'add'){
             $path .= '.oexe';
-            
         }
+        
+        if (!checkExt($path)) {
+            show_json($this->L['error']);exit;
+        }
+
         $data = json_decode(rawurldecode($this->in['data']),true);
         unset($data['name']);unset($data['desc']);unset($data['group']);
-
         $res  = file_put_contents($path, json_encode($data));
         show_json($this->L['success']);
     }
@@ -44,7 +68,7 @@ class app extends Controller{
      */
     public function get() {
         $list = array();
-        if (!$this->in['group'] || $this->in['group']=='all') {
+        if (!isset($this->in['group']) || $this->in['group']=='all') {
             $list = $this->sql->get();
         }else{
             $list = $this->sql->get('group','',$this->in['group']);
@@ -57,7 +81,6 @@ class app extends Controller{
      * 添加
      */
     public function add() {  
-        if (!$GLOBALS['is_root']) show_json($this->L['no_permission'],false);
         $res=$this->sql->add(rawurldecode($this->in['name']),$this->_init());
         if($res) show_json($this->L['success']);
         show_json($this->L['error_repeat'],false);
@@ -67,7 +90,6 @@ class app extends Controller{
      * 编辑
      */
     public function edit() {
-        if (!$GLOBALS['is_root']) show_json($this->L['no_permission'],false);
         //查找到一条记录，修改为该数组
         if($this->sql->replace_update(
             rawurldecode($this->in['old_name']),
@@ -80,33 +102,26 @@ class app extends Controller{
      * 删除
      */
     public function del() {
-        if (!$GLOBALS['is_root']) show_json($this->L['no_permission'],false);
         if($this->sql->delete(rawurldecode($this->in['name']))){
             show_json($this->L['success']);
         }
         show_json($this->L['error'],false);
     }
 
-
+    public function get_url_title(){
+        $html = curl_get_contents($this->in['url']);
+        $result = match($html,"<title>(.*)<\/title>");
+        if (strlen($result)>50) {
+            $result = mb_substr($result,0,50,'utf-8');
+        }
+        if (!$result || strlen($result) == 0) {
+            $result = $this->in['url'];
+            $result = str_replace(array('http://','&','/'),array('','@','-'), $result);
+        }
+        show_json($result);
+    }
 
     private function _init(){
         return  json_decode(rawurldecode($this->in['data']));
-    }
-
-    /**
-     * 用户app初始化
-     */
-    public function init_app($user) {
-        $sql=new fileCache($this->config['system_file']['apps']);
-        $list = $sql->get();
-        $desktop = USER_PATH.$user.'/home/desktop/';
-        foreach ($list as $key => $data) {
-            //touch($path);
-            $path = iconv_system($desktop.$key.'.oexe');
-            unset($data['name']);
-            unset($data['desc']);
-            unset($data['group']);
-            file_put_contents($path, json_encode($data));
-        }
     }
 }

@@ -2,17 +2,23 @@
 <html xmlns="http://www.w3.org/1999/xhtml">
 <head>
 	<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-	<title><?php echo $L['ui_editor'].' '.$L['title'];?></title>
+	<title><?php echo $L['ui_editor'].' - '.$L['kod_name'].$L['kod_power_by'];?></title>
 	<link rel="Shortcut Icon" href="<?php echo STATIC_PATH;?>images/favicon.ico">
-	<link href="<?php echo STATIC_PATH;?>style/bootstrap.css" rel="stylesheet"/>		
-	<link   href="<?php echo STATIC_PATH;?>style/font-awesome/style.css" rel="stylesheet"/>
-	<?php if(STATIC_LESS == 'css'){ ?>
-	<link href="<?php echo STATIC_PATH;?>style/skin/<?php echo $config['user']['theme'];?>app_editor.css" rel="stylesheet" id='link_css_list'/>
-	<?php }else{//less_compare_online ?>
-	<link rel="stylesheet/less" type="text/css" href="<?php echo STATIC_PATH;?>style/skin/<?php echo $config['user']['theme'];?>app_editor.less"/>
-	<script src="<?php echo STATIC_PATH;?>js/lib/less-1.4.2.min.js"></script>	
-	<?php } ?>
+	<link href="<?php echo STATIC_PATH;?>style/bootstrap.css?ver=<?php echo KOD_VERSION;?>" rel="stylesheet"/><link rel="stylesheet" href="./static/style/font-awesome/css/font-awesome.css">
+	<link rel="stylesheet" href="./static/style/font-awesome/css/font-awesome.css">
+	<!--[if IE 7]>
+	<link rel="stylesheet" href="./static/style/font-awesome/css/font-awesome-ie7.css">
+	<![endif]-->
+	
+	
+	<link href="<?php echo STATIC_PATH;?>style/skin/<?php echo $config['user']['theme'];?>app_editor.css?ver=<?php echo KOD_VERSION;?>" rel="stylesheet" id='link_css_list'/>
+	
 </head>
+
+<?php if(isset($_GET['project'])){?>
+<style>.topbar{display: none;}.frame-header{top:0;}.frame-main{top:0px;}</style>
+<?php } ?>
+
 <body style="overflow:hidden;" oncontextmenu="return core.contextmenu();">
 	<?php include(TEMPLATE.'common/navbar.html');?>
 	<div class="frame-main">
@@ -35,36 +41,24 @@
 				<div class="menuTreeFolder"></div>
 				<div class="menuTreeFile"></div>				
 				<div class ='frame'>
-					 <iframe name="OpenopenEditor" src="?editor/edit" style="width:100%;height:100%;border:0;" frameborder=0></iframe>
+					 <iframe name="OpenopenEditor" src="./index.php?editor/edit" style="width:100%;height:100%;border:0;" frameborder=0></iframe>
 				</div>	
 			</div>
 		</div><!-- / frame-right end-->
 	</div><!-- / frame-main end-->
-
-
-<script src="<?php echo STATIC_PATH;?>js/lib/seajs/sea.js"></script>
+<?php include(TEMPLATE.'common/footer.html');?>
+<script src="<?php echo STATIC_PATH;?>js/lib/seajs/sea.js?ver=<?php echo KOD_VERSION;?>"></script>
+<script src="./index.php?user/common_js#id=<?php echo rand_string(8);?>"></script>
 <script type="text/javascript">
-    var LNG = <?php echo json_encode($L);?>;
-    var AUTH = <?php echo json_encode($GLOBALS['auth']);?>;
-	var G = {
-		is_root 	: <?php echo  $GLOBALS['is_root'];?>,
-		web_root 	: "<?php echo $GLOBALS['web_root'];?>",
-		web_host 	: "<?php echo HOST;?>",
-		static_path : "<?php echo STATIC_PATH;?>",
-		public_path  : "<?php echo PUBLIC_PATH;?>",
-		basic_path  : "<?php echo BASIC_PATH;?>",
-		version 	: "<?php echo KOD_VERSION;?>",
-		app_host 	: "<?php echo APPHOST;?>",
-		
-		musictheme	: "<?php echo $config['user']['musictheme'];?>",
-		movietheme	: "<?php echo $config['user']['movietheme'];?>",		
-		home 		: "<?php echo HOME;?>"
-	};
+	G.project = "<?php echo $_GET['project'];?>";
 	seajs.config({
 		base: "<?php echo STATIC_PATH;?>js/",
-		preload: ["lib/jquery-1.8.0.min"]
+		preload: ["lib/jquery-1.8.0.min"],
+		map:[
+			[ /^(.*\.(?:css|js))(.*)$/i,'$1$2?ver='+G.version]
+		]
 	});
-	seajs.use("<?php echo STATIC_JS;?>/src/editor/main");
+	seajs.use("app/src/editor/main");
 </script>
 </body>
 </html>

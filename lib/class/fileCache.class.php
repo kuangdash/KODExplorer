@@ -43,9 +43,6 @@ class fileCache
     function __construct($file) {
         $this->file = $file;
         $this->data= self::load($file);
-        if (!is_array($this->data)) {
-            $this->reset();
-        }
     }
     
     /**
@@ -215,6 +212,7 @@ class fileCache
         $str = file_get_contents($file);
         $str = substr($str, strlen(CONFIG_EXIT));
         $data= json_decode($str,true);
+        if (is_null($data)) $data = array();
         return $data;
     }
     /**

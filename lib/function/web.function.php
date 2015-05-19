@@ -36,12 +36,45 @@ function get_client_ip($b_ip = true){
 } 
 
 
+// url头部数据
+function url_header($url){
+	$name = '';$length=0;
+	$header = @get_headers($url,true);
+	if (!$header) return false;
 
+	if(isset($header['Content-Length'])){
+		if(is_array($header['Content-Length'])){
+			$length = array_pop($header['Content-Length']);
+		}else{
+			$length = $header['Content-Length'];
+		}
+	}
+	if(isset($header['Content-Disposition'])){
+		if(is_array($header['Content-Disposition'])){
+			$dis = array_pop($header['Content-Disposition']);
+		}else{
+			$dis = $header['Content-Disposition'];
+		}
+		$i = strpos($dis,"filename=");
+		if($i!= false){
+			$name = substr($dis,$i+9);
+			$name = trim($name,'"');
+		}
+	}
+	if(!$name){
+	    $name = get_path_this($url);
+	    if (stripos($name,'?')) $name = substr($name,0,stripos($name,'?'));
+	    if (!$name) $name = 'index.html';
+	}
+	// $header['name'] = $name;
+	// return $header;
+	return array('length'=>$length,'name'=>$name);
+} 
 
 
 // url检查
 function check_url($url){
-	$array = get_headers($url, 1);
+	$array = get_headers($url,true);
 	if (preg_match('/404/', $array[0])) {
 		return false;
 	} elseif (preg_match('/403/', $array[0])) {
@@ -56,7 +89,7 @@ function check_url($url){
  */
 function curl_get_contents($url){
 	$ch = curl_init();
-	$timeout = 5;
+	$timeout = 4;
 	$user_agent = "Mozilla/4.0 (compatible; MSIE 8.0; Windows NT 6.0; WOW64; Trident/4.0; SLCC1)";
 	curl_setopt ($ch, CURLOPT_URL, $url);
 	curl_setopt ($ch, CURLOPT_HEADER, 0);
@@ -355,6 +388,7 @@ function get_file_mime($ext){
 		"dll" => "application/x-msdownload",
 		"dms" => "application/octet-stream",
 		"doc" => "application/msword",
+		"docx" => "application/msword",
 		"dot" => "application/msword",
 		"dvi" => "application/x-dvi",
 		"dxr" => "application/x-director",
@@ -439,6 +473,7 @@ function get_file_mime($ext){
 		"ppm" => "image/x-portable-pixmap",
 		"pps" => "application/vnd.ms-powerpoint",
 		"ppt" => "application/vnd.ms-powerpoint",
+		"pptx" => "application/vnd.ms-powerpoint",
 		"prf" => "application/pics-rules",
 		"ps" => "application/postscript",
 		"pub" => "application/x-mspublisher",
@@ -501,6 +536,7 @@ function get_file_mime($ext){
 		"xlc" => "application/vnd.ms-excel",
 		"xlm" => "application/vnd.ms-excel",
 		"xls" => "application/vnd.ms-excel",
+		"xlsx" => "application/vnd.ms-excel",
 		"xlt" => "application/vnd.ms-excel",
 		"xlw" => "application/vnd.ms-excel",
 		"xof" => "x-world/x-vrml",
@@ -509,9 +545,32 @@ function get_file_mime($ext){
 		"z" => "application/x-compress",
 		"zip" => "application/zip"
 	);
+	
+	//代码 或文本浏览器输出
+	$text = array('oexe','inc','inf','csv','log','asc','tsv');
+	$code = array("abap","abc","as","ada","adb","htgroups","htpasswd","conf","htaccess","htgroups",
+				"htpasswd","asciidoc","asm","ahk","bat","cmd","c9search_results","cpp","c","cc","cxx","h","hh","hpp",
+				"cirru","cr","clj","cljs","CBL","COB","coffee","cf","cson","Cakefile","cfm","cs","css","curly","d",
+				"di","dart","diff","patch","Dockerfile","dot","dummy","dummy","e","ejs","ex","exs","elm","erl",
+				"hrl","frt","fs","ldr","ftl","gcode","feature",".gitignore","glsl","frag","vert","go","groovy",
+				"haml","hbs","handlebars","tpl","mustache","hs","hx","html","htm","xhtml","erb","rhtml","ini",
+				"cfg","prefs","io","jack","jade","java","js","jsm","json","jq","jsp","jsx","jl","tex","latex",
+				"ltx","bib","lean","hlean","less","liquid","lisp","ls","logic","lql","lsl","lua","lp","lucene",
+				"Makefile","GNUmakefile","makefile","OCamlMakefile","make","md","markdown","mask","matlab",
+				"mel","mc","mush","mysql","nix","m","mm","ml","mli","pas","p","pl","pm","pgsql","php","phtml",
+				"ps1","praat","praatscript","psc","proc","plg","prolog","properties","proto","py","r","Rd",
+				"Rhtml","rb","ru","gemspec","rake","Guardfile","Rakefile","Gemfile","rs","sass","scad","scala",
+				"scm","rkt","scss","sh","bash",".bashrc","sjs","smarty","tpl","snippets","soy","space","sql",
+				"styl","stylus","svg","tcl","tex","txt","textile","toml","twig","ts","typescript","str","vala",
+				"vbs","vb","vm","v","vh","sv","svh","vhd","vhdl","xml","rdf","rss",
+				"wsdl","xslt","atom","mathml","mml","xul","xbl","xaml","xq","yaml","yml","htm",
+				"xib","storyboard","plist","csproj");
 	if (array_key_exists($ext,$mimetypes)){
 		return $mimetypes[$ext];
 	}else{
+		if(in_array($ext,$text) || in_array($ext,$code)){
+			return "text/plain";
+		}
 		return 'application/octet-stream';
 	}
 }

@@ -7,17 +7,10 @@
 */
 
 class desktop extends Controller{
-    /**
-     * 构造函数
-     */
     function __construct() {
         parent::__construct();
         $this->tpl = TEMPLATE.'desktop/';	
     }
-
-    /**
-     * 首页
-     */
     public function index() {
         $wall = $this->config['user']['wall'];
         if(strlen($wall)>3){
@@ -25,9 +18,9 @@ class desktop extends Controller{
         }else{
             $this->assign('wall',STATIC_PATH.'images/wall_page/'.$wall.'.jpg');
         }
-
-        $upload_max = get_post_max();   
-        $this->assign('upload_max',$upload_max);  
+        if (!is_dir(MYHOME.'desktop/') && is_writable(MYHOME)) {
+            mkdir(MYHOME.'desktop/');
+        }
         $this->display('index.php');
     }
 }

@@ -266,6 +266,13 @@ var // currently active contextMenu trigger
                 }
                 // show menu
                 op.show.call($this, e.data, e.pageX, e.pageY);
+                
+
+                //change by warlee
+                try{
+                    rightMenu.menuShow();
+                } catch(e) {};
+                
             }
         },
         // contextMenu left-click trigger
@@ -468,7 +475,8 @@ var // currently active contextMenu trigger
                     return;
                     
                 default: // 0-9, a-z
-                    var k = (String.fromCharCode(e.keyCode)).toUpperCase();
+                    e.preventDefault();//add by warlee //rename in input [repeat ]
+                    var k = (String.fromCharCode(e.keyCode)).toLowerCase();
                     if (opt.accesskeys[k]) {
                         // according to the specs accesskeys must be invoked immediately
                         opt.accesskeys[k].$node.trigger(opt.accesskeys[k].$menu
@@ -652,6 +660,10 @@ var // currently active contextMenu trigger
                 return;
             }
 
+            if (e.which ==3) {//changed by warlee
+                return;//不是右键触发，暂时取消；损失右键弹出后移动松起触发的功能
+            };
+
             e.preventDefault();
             e.stopImmediatePropagation();
 
@@ -755,6 +767,7 @@ var // currently active contextMenu trigger
                 .data('contextMenu', opt)
                 .addClass("context-menu-active");
 			
+            //changed by warlee
 			/*
             if (Main.SetSelect != undefined) {
                 if (Main.Global.fileListSelectNum <= 1 
@@ -1104,16 +1117,7 @@ var // currently active contextMenu trigger
         //warlee
         layer: function(opt, zIndex) {
             $visibleMenu = $('.context-menu-list').filter(':visible');
-            if (typeof(Global) != "undefined") {
-                $(Config.MainContent).data('contextMenuRoot', opt)
-                .unbind("contextmenu")
-                .contextmenu(function(e){
-                    $visibleMenu.trigger('contextmenu:hide');
-                    return true;
-                });                
-            }else{
-                return true;
-            }
+            return true;
         }
     };
 
@@ -1123,7 +1127,8 @@ function splitAccesskey(val) {
         keys = [];
         
     for (var i=0, k; k = t[i]; i++) {
-        k = k[0].toUpperCase(); // first character only
+        k = k[0];
+        //k = k[0].toUpperCase(); // first character only
         // theoretically non-accessible characters should be ignored, but different systems, different keyboard layouts, ... screw it.
         // a map to look up already used access keys would be nice
         keys.push(k);
